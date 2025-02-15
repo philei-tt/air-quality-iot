@@ -25,15 +25,19 @@ def set_servo_angle():
             raise ValueError()
     except ValueError:
         return jsonify({'status': 'error', 'message': 'Value is not valid integer in range [0:180]'}), 400
+    print(f"Received set_servo_angle={servo_angle}")
     return jsonify({'status': 'success', 'new_value': servo_angle})
 
 @app.route('/get_servo_angle', methods=['GET'])
 def get_servo_angle():
+    print(f"Received get_servo_angle")
     return jsonify({'value': servo_angle})
 
 @app.route('/check_alive', methods=['GET'])
 def check_alive():
+    print("Alive")
     return jsonify({'alive': True})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT)
+
