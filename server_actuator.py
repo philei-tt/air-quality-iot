@@ -20,12 +20,14 @@ def set_servo_angle():
     if not data or 'value' not in data:
         return jsonify({'status': 'error', 'message': 'No value provided'}), 400
     try:
-        servo_angle = int(data['value'])
-        if servo_angle < 0 or servo_angle > 180:
+        value = int(data['value'])
+        if value < 0 or value > 180:
             raise ValueError()
     except ValueError:
         return jsonify({'status': 'error', 'message': 'Value is not valid integer in range [0:180]'}), 400
     print(f"Received set_servo_angle={servo_angle}")
+    servo_angle = value
+    servo.angle = servo_angle
     return jsonify({'status': 'success', 'new_value': servo_angle})
 
 @app.route('/get_servo_angle', methods=['GET'])
