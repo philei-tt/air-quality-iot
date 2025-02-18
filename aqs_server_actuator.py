@@ -1,45 +1,52 @@
 from flask import Flask, request, jsonify
-from gpiozero import AngularServo
-from gpiozero.pins.pigpio import PiGPIOFactory
 
-from time import sleep
+from aqs.actuators.sg_90 import SG90Actuator, Action
+from aqs.logger import LOGGER, setup_logger
+from aqs.argparser import parse_args
 
-SERVO_CONTROL_PIN = 18
-factory = PiGPIOFactory()
-servo = AngularServo(SERVO_CONTROL_PIN, min_angle=0, max_angle=180, min_pulse_width=0.0005, max_pulse_width=0.0024, pin_factory=factory)
+servo = SG90Actuator("servo", 18)
 
 app = Flask(__name__)
 PORT = 5000
 
-servo_angle = 0
-
-@app.route('/set_servo_angle', methods=['POST'])
+@app.route("/rotate", methods=["POST"])
 def set_servo_angle():
-    global servo_angle
+    global servo
+    
     data = request.get_json()
-    if not data or 'value' not in data:
-        return jsonify({'status': 'error', 'message': 'No value provided'}), 400
-    try:
-        value = int(data['value'])
-        if value < 0 or value > 180:
-            raise ValueError()
-    except ValueError:
-        return jsonify({'status': 'error', 'message': 'Value is not valid integer in range [0:180]'}), 400
-    print(f"Received set_servo_angle={servo_angle}")
-    servo_angle = value
-    servo.angle = servo_angle
-    return jsonify({'status': 'success', 'new_value': servo_angle})
+    if not data or "value" not in data:
+        return jsonify({"status": "error", "message": "No value provided"}), 400
+    rotate_deg = 0
+    # try:
+    rotate_deg = int(data["value"])
+    rotated = servo.act(Action.ROTATE_DEG, rotate_deg)
+    if not rotated:
+        raise RuntimeError("Failed to rotate")
+    # except Exception as e:
+        # LOGGER.error(f"Error rotating: {e}")
+        # return jsonify({"status": "error", "message": str(e)}), 400
+    LOGGER.info(f"Successfully rotated by {rotate_deg}")
+    return jsonify({"status": "success", "new_value": servo.get_state()})
 
-@app.route('/get_servo_angle', methods=['GET'])
+@app.route("/get_servo_angle", methods=["GET"])
 def get_servo_angle():
-    print(f"Received get_servo_angle")
-    return jsonify({'value': servo_angle})
+    LOGGER.info(f"Received get_servo_angle")
+    return jsonify({"value": servo.get_state()})
 
-@app.route('/check_alive', methods=['GET'])
+@app.route("/check_alive", methods=["GET"])
 def check_alive():
-    print("Alive")
-    return jsonify({'alive': True})
+    LOGGER.info("Received check_alive")
+    return jsonify({"alive": True})
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=PORT)
+@app.route("/close", methods=["GET"])
+def close():
+    LOGGER.info("Received close")
+    return jsonify({"close": True})
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    setup_logger(args.loglevel, args.logfile)
+
+    app.run(host="0.0.0.0", port=PORT)
 

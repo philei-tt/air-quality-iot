@@ -20,35 +20,38 @@ class SG90Actuator(Actuator):
         )
 
         # Start sequence (0->180->0)
+        LOGGER.info("Servo start sequence...")
         self._servo.angle = 0
-        sleep(2)
+        sleep(1)
         self._servo.angle = 180
-        sleep(2)
+        sleep(1)
         self._servo.angle = 0
 
     def get_supported_actions(self):
-        return [Action.ROTATE]
+        return [Action.ROTATE_DEG]
 
     def act(self, action: Action, value):
-        if action != Action.ROTATE:
+        if action != Action.ROTATE_DEG:
             LOGGER.error(f"[{self.get_name()}] [SG90] Unsupported {action} action")
-            return
-        try:
-            new_angle = self._servo.angle + int(value)
-            if (
-                new_angle < self._servo.min_angle()
-                or new_angle > self._servo.max_angle()
-            ):
-                incorrent_angle = new_angle
-                new_angle = min(
-                    self._servo.max_angle(), max(self._servo.min_angle(), new_angle)
-                )
-                LOGGER.warning(
-                    f"[{self.get_name()}] [SG90] Angle is too big/small: {incorrent_angle}, defaulting to {new_angle}"
-                )
-            self._servo.angle = new_angle
-        except Exception as e:
-            LOGGER.error(f"[{self.get_name()}] [SG90] Action fail: {e}")
+            return False
+        # try:
+        new_angle = self._servo.angle + int(value)
+        if (
+            new_angle < self._servo.min_angle or 
+            new_angle > self._servo.max_angle
+        ):
+            incorrent_angle = new_angle
+            new_angle = min(
+                self._servo.max_angle, max(self._servo.min_angle, new_angle)
+            )
+            LOGGER.warning(
+                f"[{self.get_name()}] [SG90] Angle is too big/small: {incorrent_angle}, defaulting to {new_angle}"
+            )
+        self._servo.angle = new_angle
+        # except Exception as e:
+        #     LOGGER.error(f"[{self.get_name()}] [SG90] Action fail: {e}")
+        #     return False
+        return True
 
     def get_state(self):
         return self._servo.angle
