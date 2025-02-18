@@ -34,8 +34,7 @@ class SG90Actuator(Actuator):
         if action != Action.ROTATE_DEG:
             LOGGER.error(f"[{self.get_name()}] [SG90] Unsupported {action} action")
             return False
-        # try:
-        new_angle = self._servo.angle + int(value)
+        new_angle = self._servo.angle + float(value)
         if (
             new_angle < self._servo.min_angle or 
             new_angle > self._servo.max_angle
@@ -48,9 +47,6 @@ class SG90Actuator(Actuator):
                 f"[{self.get_name()}] [SG90] Angle is too big/small: {incorrent_angle}, defaulting to {new_angle}"
             )
         self._servo.angle = new_angle
-        # except Exception as e:
-        #     LOGGER.error(f"[{self.get_name()}] [SG90] Action fail: {e}")
-        #     return False
         return True
 
     def get_state(self):

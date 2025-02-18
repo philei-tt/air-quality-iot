@@ -17,14 +17,14 @@ def set_servo_angle():
     if not data or "value" not in data:
         return jsonify({"status": "error", "message": "No value provided"}), 400
     rotate_deg = 0
-    # try:
-    rotate_deg = int(data["value"])
-    rotated = servo.act(Action.ROTATE_DEG, rotate_deg)
-    if not rotated:
-        raise RuntimeError("Failed to rotate")
-    # except Exception as e:
-        # LOGGER.error(f"Error rotating: {e}")
-        # return jsonify({"status": "error", "message": str(e)}), 400
+    try:
+        rotate_deg = float(data["value"])
+        rotated = servo.act(Action.ROTATE_DEG, rotate_deg)
+        if not rotated:
+            raise RuntimeError("Failed to rotate")
+    except Exception as e:
+        LOGGER.error(f"Error rotating: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 400
     LOGGER.info(f"Successfully rotated by {rotate_deg}")
     return jsonify({"status": "success", "new_value": servo.get_state()})
 
