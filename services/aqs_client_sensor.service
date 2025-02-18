@@ -1,10 +1,10 @@
 [Unit]
-Description=AQS server actuator
+Description=AQS client sensor
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=python3 aqs_server_actuator.py --loglevel INFO
+ExecStart=python3 aqs_client_sensor.py --loglevel INFO
 Restart=on-failure
 RestartSec=5
 
