@@ -22,9 +22,9 @@ class SG90Actuator(Actuator):
         # Start sequence (0->180->0)
         LOGGER.info("Servo start sequence...")
         self._servo.angle = 0
-        sleep(1)
+        sleep(2)
         self._servo.angle = 180
-        sleep(1)
+        sleep(2)
         self._servo.angle = 0
 
     def get_supported_actions(self):

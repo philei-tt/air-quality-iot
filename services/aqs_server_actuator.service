@@ -1,0 +1,12 @@
+[Unit]
+Description=AQS server actuator
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=python3 aqs_server_actuator.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
