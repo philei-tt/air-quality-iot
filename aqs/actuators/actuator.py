@@ -16,7 +16,7 @@ class Actuator:
         raise NotImplementedError()
     
     @abstractmethod
-    def act(self, action: Action, value):
+    def act(self, action: Action, value=None):
         raise NotImplementedError()
     
     @abstractmethod

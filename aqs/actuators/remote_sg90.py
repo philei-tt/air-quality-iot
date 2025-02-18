@@ -9,32 +9,27 @@ class RemoteSG90Actuator(Actuator):
     def __init__(self, name, url):
         super().__init__(name)
         self._url = url
-
-        # Start sequence (0->180->0)
-        angle = self.__get_servo_angle()
-        self.__rotate(-angle)
-        sleep(2)
-        self.__rotate(180)
-        sleep(2)
-        self.__rotate(-180)
-
+        
     def get_supported_actions(self):
-        return [Action.ROTATE]
+        return [Action.ROTATE_DEG]
 
     def act(self, action: Action, value):
-        if action != Action.ROTATE:
+        if action != Action.ROTATE_DEG:
             LOGGER.error(
                 f"[{self.get_name()}] [Remote SG90] Unsupported {action} action"
             )
-            return
+            return False
         try:
             resp = self.__rotate(value)
             if resp.status_code != 200:
                 LOGGER.error(
                     f"[{self.get_name()}] [Remote SG90] Failed to rotate: {resp.json()}"
                 )
+                return False
         except Exception as e:
             LOGGER.error(f"[{self.get_name()}] [Remote SG90] Action fail: {e}")
+            return False
+        return True
 
     def get_state(self):
         return self.__get_servo_angle()
@@ -58,7 +53,7 @@ class RemoteSG90Actuator(Actuator):
         if j is None or ("value" not in j):
             LOGGER.info("Remote SG90: Failed to get servo motor angle")
             return None
-        return j["value"]
+        return int(j["value"])
 
     def __check_alive(self):
         response = requests.get(f"{self._url}/check_alive", timeout=2)

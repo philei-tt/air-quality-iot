@@ -46,6 +46,12 @@ class BLEConfigurator:
             self._current_temperature = float(new_temperature)
         except Exception as e:
             LOGGER.error(f"Failed to set current temperature: {e}")
+            
+    def get_target_humidity(self):
+        return self._target_humidity
+    
+    def get_target_temperature(self):
+        return self._target_temperature
 
     # ------ Callbacks for GATT server ------ #
     def __read_target_humidity(self):

@@ -14,21 +14,32 @@ from aqs.sensors.dht11_temperature import DHT11TemperatureSensor
 from aqs.sensors.dht11_humidity import DHT11HumiditySensor
 
 from aqs.actuators.remote_sg90 import RemoteSG90Actuator, Actuator, Action
+from aqs.actuators.led_raspberry import LEDActuator
 
 from time import sleep
+import requests
 import random
 
-ACTUATOR_IP = "192.168.135.13"
+ACTUATOR_IP = "192.168.46.13"
 ACTUATOR_PORT = 5000
 ACTUATOR_URL = f"http://{ACTUATOR_IP}:{ACTUATOR_PORT}"
 MEASURE_PERIOD_S = 3
+Kp = 0.20 # TODO: adjust
 
+counter = 0
 
-def rotate_humidifier_intensity(config: BLEConfigurator, servo: Actuator):
+def rotate_humidifier_intensity(config: BLEConfigurator, servo: RemoteSG90Actuator, current_humidity: float):
     # import random
     # servo.act(Action.ROTATE_DEG, )
-    LOGGER.warning("TODO: add rotate logic")
+    # if random.randint(0, 1):
+    global counter
     
+    error = config.get_target_humidity() - current_humidity  # positive error means humidity is low
+    # Increase servo angle if humidity is too low, decrease if too high.
+    # new_angle = servo.get_state() + Kp * error
+    # new_angle = max(0, min(180, new_angle))
+    angle_rotate = Kp * error
+    servo.act(Action.ROTATE_DEG, angle_rotate)
 
 
 def run_ble_server() -> BLEConfigurator:
@@ -41,6 +52,19 @@ def run_ble_server() -> BLEConfigurator:
     ble_thread.start()
 
     return ble
+
+
+def check_servo_alive(servo: RemoteSG90Actuator):
+    while True:
+        try:
+            if not remote_servo.is_alive():
+                LOGGER.error("[Remote SG90] Server timeout")
+                continue
+            else:
+                break
+        except requests.exceptions.ConnectionError:
+            LOGGER.error("[Remote SG90] Failed to connect to server")
+            sleep(1)
 
 
 if __name__ == "__main__":
@@ -56,23 +80,30 @@ if __name__ == "__main__":
 
     # actuators
     remote_servo = RemoteSG90Actuator("remote_servo", ACTUATOR_URL)
+    
+    # Wait till connected
+    check_servo_alive(remote_servo)
 
     temp_units_str = str(temp_sensor.get_units())
     humi_units_str = str(humi_sensor.get_units())
 
     while True:
-        # current_temp = temp_sensor.get_readings()
-        # current_humi = humi_sensor.get_readings()
-        current_temp = random.randint(0, 10)
-        current_humi = random.randint(0, 10)
-        LOGGER.info(
-            f"readings: (temp={current_temp} {temp_units_str}, humi={current_humi} {humi_units_str})"
-        )
+        try:
+            current_temp = temp_sensor.get_readings()
+            current_humi = humi_sensor.get_readings()
+            LOGGER.info(
+                f"readings: (temp={current_temp} {temp_units_str}, humi={current_humi} {humi_units_str})"
+            )
 
-        ble_config.set_current_temperature(current_temp)
-        ble_config.set_current_humidity(current_humi)
-        
-        rotate_humidifier_intensity(ble_config, remote_servo)
+            ble_config.set_current_temperature(current_temp)
+            ble_config.set_current_humidity(current_humi)
+        except Exception as e:
+            LOGGER.error(f"Measurement error: {e}")
+
+        check_servo_alive(remote_servo)
+
+        rotate_humidifier_intensity(ble_config, remote_servo, current_humi)
+
 
         sleep(MEASURE_PERIOD_S)
         # angle = input("Angle: ")
