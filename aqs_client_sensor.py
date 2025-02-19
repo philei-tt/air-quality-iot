@@ -13,14 +13,14 @@ from aqs.ble_configurator import BLEConfigurator
 from aqs.sensors.dht11_temperature import DHT11TemperatureSensor
 from aqs.sensors.dht11_humidity import DHT11HumiditySensor
 
-from aqs.actuators.remote_sg90 import RemoteSG90Actuator, Actuator, Action
-from aqs.actuators.led_raspberry import LEDActuator
+from aqs.actuators.remote_sg90 import RemoteSG90Actuator, Action
+
+# from aqs.cloud_logger import AWSCloudMQQTLogger   # TODO: Fix cloud setup
 
 from time import sleep
 import requests
-import random
 
-ACTUATOR_IP = "192.168.46.13"
+ACTUATOR_IP = "192.168.114.13"
 ACTUATOR_PORT = 5000
 ACTUATOR_URL = f"http://{ACTUATOR_IP}:{ACTUATOR_PORT}"
 MEASURE_PERIOD_S = 3
