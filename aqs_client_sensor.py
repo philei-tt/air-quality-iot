@@ -26,18 +26,9 @@ ACTUATOR_URL = f"http://{ACTUATOR_IP}:{ACTUATOR_PORT}"
 MEASURE_PERIOD_S = 3
 Kp = 0.20 # TODO: adjust
 
-counter = 0
-
 def rotate_humidifier_intensity(config: BLEConfigurator, servo: RemoteSG90Actuator, current_humidity: float):
-    # import random
-    # servo.act(Action.ROTATE_DEG, )
-    # if random.randint(0, 1):
-    global counter
-    
     error = config.get_target_humidity() - current_humidity  # positive error means humidity is low
     # Increase servo angle if humidity is too low, decrease if too high.
-    # new_angle = servo.get_state() + Kp * error
-    # new_angle = max(0, min(180, new_angle))
     angle_rotate = Kp * error
     servo.act(Action.ROTATE_DEG, angle_rotate)
 
